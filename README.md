@@ -177,12 +177,16 @@ Automatiza a movimentação de objetos entre os diferentes níveis de armazename
 Pode ser usado em conjunto com controle de versão.
 As regras de ciclo de vida podem ser aplicadas às versões atual e anterior de um objeto.
 # Replicação entre regiões S3:
-A replicação entre regiões só funciona se o controle de versão estiver ativado.
-Quando a replicação entre regiões está habilitada, nenhum dado pré-existente é transferido. Somente novos uploads no bucket original são replicados. Todas as atualizações subsequentes são replicadas.
-Ao replicar o conteúdo de um depósito para outro, você pode realmente alterar a propriedade do conteúdo, se desejar. Você também pode alterar a camada de armazenamento do novo depósito com o conteúdo replicado.
-Quando os arquivos são excluídos no depósito original (por meio de um marcador de exclusão, pois o controle de versão impede exclusões verdadeiras), essas exclusões não são replicadas.
-Visão geral da replicação entre regiões
-O que é e o que não é replicado, como objetos criptografados, exclusões, itens na geleira, etc.
+Podemos fazer 2 tipos de replicações - Cross Region Replication (CRR) e Same Region Replication (SRR). O controle de versão do bucket S3 deve ser ativado nos buckets S3 de origem e destino. A replicação ocorre de forma assíncrona e os 2 buckets podem pertencer a 2 contas diferentes da AWS.
+- A replicação entre regiões só funciona se o controle de versão estiver ativado.
+- Quando a replicação entre regiões está habilitada, nenhum dado pré-existente é transferido. Somente novos uploads no bucket original são replicados. Todas as atualizações subsequentes são replicadas.
+- Ao replicar o conteúdo de um depósito para outro, você pode realmente alterar a propriedade do conteúdo, se desejar. Você também pode alterar a camada de armazenamento do novo depósito com o conteúdo replicado.
+- Quando os arquivos são excluídos no depósito original (por meio de um marcador de exclusão, pois o controle de versão impede exclusões verdadeiras), essas exclusões não são replicadas.
+
+Depois que a replicação é habilitada, apenas novos objetos são replicados. Podemos replicar objetos existentes do S3 usando a replicação em lote.
+Podemos ativar ou desativar a replicação de marcadores de exclusão. (Exclusões permanentes usando id de versão não podem ser replicadas).
+Por padrão, a replicação está habilitada para todos os objetos no bucket S3 de origem, mas podemos usar alguns filtros e habilitar a replicação para objetos específicos nesse bucket.
+A replicação de bucket não pode ser encadeada.
 # Aceleração de transferência S3:
 A aceleração de transferência usa a rede do CloudFront enviando ou recebendo dados em pontos de presença CDN (chamados pontos de presença) em vez de uploads ou downloads mais lentos na origem.
 Isso é feito carregando em um URL distinto para o ponto de presença em vez do próprio bucket. Isso é transferido pelo backbone da rede da AWS em uma velocidade muito mais rápida.
@@ -245,5 +249,31 @@ A maioria dos aplicativos precisa recuperar o objeto inteiro e, em seguida, filt
 Por exemplo, vamos imaginar que você é um desenvolvedor em um grande varejista e precisa analisar os dados de vendas semanais de uma única loja, mas os dados de todas as 200 lojas são salvos em um novo CSV editado por GZIP todos os dias.
 Sem o S3 Select, você precisaria baixar, descompactar e processar todo o CSV para obter os dados necessários.
 Com o S3 Select, você pode usar uma expressão SQL simples para retornar apenas os dados da loja de seu interesse, em vez de recuperar o objeto inteiro.
+
+# Buckets e Objetos
+O Amazon S3 armazena dados em buckets (semelhantes aos diretórios de nível superior). O nome de um bucket S3 da AWS deve ser globalmente exclusivo em todas as regiões e todas as contas da AWS . Os buckets S3 têm escopo de região. Dentro de um bucket do S3, os arquivos são armazenados como objetos. S3 não tem o conceito de diretórios. Cada objeto em um bucket do S3 tem uma chave no formato s3://bucket_name/unique_value que representa o caminho completo desse objeto. A chave deve ser exclusiva para cada objeto no nível do bucket.
+
+Um objeto S3 consiste em -
+
+o conteúdo que precisamos carregar (pode ter tamanho máximo de 5 TB). Ao fazer upload de conteúdo com mais de 5 GB de tamanho para um bucket do S3, devemos usar o upload de várias partes.
+alguns metadados - lista de pares de chave/valor de texto definidos pelo usuário ou pelo próprio S3.
+até 10 tags - pares chave/valor unicode úteis no caso de segurança e ciclo de vida do objeto.
+ID da versão se o controle de versão do bucket do S3 estiver ativado.
+
+# Segurança S3
+O controle de acesso a buckets e objetos do AWS S3 para usuários/funções do IAM na mesma conta da AWS pode ser feito usando as políticas do IAM da AWS. A AWS também nos fornece políticas baseadas em recursos -
+
+S3 Bucket Policies - Regras amplas do bucket que podem ser atribuídas a usuários do IAM na conta atual da AWS ou até mesmo a outras contas da AWS.
+
+As políticas de bucket do S3 são usadas em casos como - conceder acesso público ao bucket do S3, forçar objetos do S3 a serem criptografados no upload ou conceder acesso a outras contas da AWS.
+
+Listas de controle de acesso a objetos (ACLs) - Políticas de nível de objeto granular.
+
+💡As políticas de nível de bucket também podem ser configuradas usando Bucket ACLs, mas é recomendável usar S3 Bucket Policies.
+O recurso de ACLs de balde ou objeto pode ser desativado, se você desejar.
+
+A AWS também fornece uma configuração chamada Block Public Access . Se você ativar isso para um bucket do S3, independentemente de qualquer política de bucket do S3 existente que conceda acesso público ao bucket do S3, esse bucket do S3 nunca será exposto à Internet pública. Você também pode ativar Bloquear acesso público no nível da conta da AWS.
+
+A criptografia em repouso está disponível para objetos S3.
 Ao reduzir o volume de dados que precisam ser carregados e processados por seus aplicativos, o S3 Select pode melhorar o desempenho da maioria dos aplicativos que acessam com frequência os dados do S3 em até 400% porque você está lidando com significativamente menos dados.
 Você também pode usar o S3 Select para Glacier.
