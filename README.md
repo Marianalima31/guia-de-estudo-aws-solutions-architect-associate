@@ -201,7 +201,7 @@ AWS Lambda - AWS Lambda é um serviço de computação onde você pode carregar 
 # S3 e ElasticSearch:
 Se você estiver usando o S3 para armazenar arquivos de log, o ElasticSearch fornece recursos de pesquisa completos para logs e pode ser usado para pesquisar dados armazenados em um bucket do S3.
 Você pode integrar seu domínio ElasticSearch com S3 e Lambda. Nessa configuração, todos os novos logs recebidos pelo S3 acionarão uma notificação de evento para o Lambda, que por sua vez executará o código do aplicativo nos novos dados de log. Depois que seu código terminar de processar, os dados serão transmitidos para seu domínio ElasticSearch e estarão disponíveis para observação.
-# Maximizando o desempenho de leitura/gravação do S3:
+# Maximizing S3 Read/Write Performance/ Maximizando o desempenho de leitura/gravação do S3:
 Se a taxa de solicitação para leitura e gravação de objetos no S3 for extremamente alta, você poderá usar a nomenclatura sequencial baseada em data para seus prefixos para melhorar o desempenho. Versões anteriores do AWS Docs também sugeriam o uso de chaves hash ou strings aleatórias para prefixar o nome do objeto. Nesses casos, as partições usadas para armazenar os objetos serão melhor distribuídas e, portanto, permitirão um melhor desempenho de leitura/gravação de seus objetos.
 Se seus dados do S3 estiverem recebendo um grande número de solicitações GET de usuários, você deve considerar o uso do Amazon CloudFront para otimização de desempenho. Ao integrar o CloudFront com o S3, você pode distribuir conteúdo por meio do cache do CloudFront para seus usuários para menor latência e maior taxa de transferência de dados. Isso também tem a vantagem adicional de enviar menos solicitações diretas ao S3, o que reduzirá os custos. Por exemplo, suponha que você tenha alguns objetos muito populares. O CloudFront busca esses objetos do S3 e os armazena em cache. O CloudFront pode atender solicitações futuras para os objetos de seu cache, reduzindo o número total de solicitações GET enviadas ao Amazon S3.
 Mais informações sobre como garantir alto desempenho no S3
@@ -213,7 +213,7 @@ Cada registro de log de acesso fornece detalhes sobre uma única solicitação d
 O S3 coleta periodicamente registros de log de acesso do bucket que você deseja monitorar
 O S3 então consolida esses registros em arquivos de log
 O S3 finalmente carrega os arquivos de log para seu bucket de monitoramento secundário como objetos de log
-# Carregamento de várias partes do S3:
+# S3 Multipart Upload / Carregamento de várias partes do S3:
 O upload de várias partes permite fazer upload de um único objeto como um conjunto de partes. Cada parte é uma parte contígua dos dados do objeto. Você pode carregar essas partes do objeto de forma independente e em qualquer ordem.
 Uploads em várias partes são recomendados para arquivos com mais de 100 MB e é a única maneira de fazer upload de arquivos com mais de 5 GB. Ele atinge a funcionalidade carregando seus dados em paralelo para aumentar a eficiência.
 Se a transmissão de qualquer parte falhar, você pode retransmitir essa parte sem afetar outras partes. Após o upload de todas as partes do seu objeto, o Amazon S3 monta essas partes e cria o objeto.
@@ -277,3 +277,64 @@ A AWS também fornece uma configuração chamada Block Public Access . Se você 
 A criptografia em repouso está disponível para objetos S3.
 Ao reduzir o volume de dados que precisam ser carregados e processados por seus aplicativos, o S3 Select pode melhorar o desempenho da maioria dos aplicativos que acessam com frequência os dados do S3 em até 400% porque você está lidando com significativamente menos dados.
 Você também pode usar o S3 Select para Glacier.
+
+
+# CloudFront
+CloudFront Simplified:
+
+O serviço AWS CDN é chamado CloudFront. Ele fornece conteúdo e ativos armazenados em cache para aumentar o desempenho global do seu aplicativo. Os principais componentes do CloudFront são os pontos de presença (endpoints de cache), a origem (fonte original da verdade a ser armazenada em cache, como uma instância EC2, um bucket S3, um Elastic Load Balancer ou uma configuração do Route 53) e a distribuição (o arranjo de localizações de borda a partir da origem ou basicamente da própria rede). 
+
+# CloudFront e AWS Global Accelerator
+CloudFront é uma rede de entrega de conteúdo (CDN) fornecida pela AWS. Ele melhora o desempenho de leitura armazenando conteúdo em cache em locais de borda e, assim, proporcionando uma melhor experiência do usuário, reduzindo a latência do aplicativo.
+
+O CloudFront possui 216 pontos de presença em todo o mundo. Ele suporta vários tipos de origens - buckets S3, origens personalizadas (qualquer endpoint HTTP - como uma instância EC2, ALB, site S3 etc.)
+
+💡 Você pode limitar o acesso de um bucket S3 apenas ao CloudFront usando a Política de acesso de origem (OAC) + as políticas de bucket S3 necessárias, fazendo com que os objetos S3 ainda sejam acessíveis globalmente. 💡 CloudFront com S3 deve ser usado para conteúdo estático que deve estar disponível em qualquer lugar. A replicação entre regiões S3 deve ser usada para conteúdo dinâmico que precisa estar disponível apenas em algumas regiões e com baixa latência.
+O CloudFront fornece o recurso de restrição geográfica que permite restringir o acesso ao seu conteúdo com base na localização geográfica do visualizador. Você pode criar uma lista de permissões/lista de bloqueio para essa finalidade. O CloudFront usa um terceiro banco de dados para detectar o país do usuário usando o IP do usuário.
+
+O custo de saída varia entre os pontos de presença. Isso é o CloudFront nos oferece 3 classes de preços -
+
+Classe de preço 100 – Somente pontos de presença com custos de saída mais baratos são usados.
+Classe de Preço 200 - Esta classe é mais cara que a anterior e abrange mais regiões que a primeira. Se a baixa latência for importante, considere usar esta classe.
+Classe de Preço Todas - Esta classe é a mais cara e abrange todas as regiões. Se o conteúdo for muito importante e precisar estar disponível em qualquer lugar, esta é a faixa de preço recomendada.
+
+# Detalhes principais do CloudFront:
++ Quando o conteúdo é armazenado em cache, isso é feito por um determinado limite de tempo chamado Time To Live, ou TTL, que é sempre em segundos
++ Se necessário, o CloudFront pode servir sites inteiros, incluindo conteúdo dinâmico, estático, de streaming e interativo.
++ As solicitações são sempre roteadas e armazenadas em cache no ponto de presença mais próximo do usuário, propagando assim os nós CDN e garantindo o melhor desempenho para solicitações futuras.
++ Existem dois tipos diferentes de distribuições:
+  + Distribuição na Web: sites, itens normais em cache, etc.
+  + RTMP: streaming de conteúdo, adobe, etc.
++ Os pontos de presença não são apenas somente leitura. Eles podem ser gravados, o que retornará o valor da gravação à origem.
++ O conteúdo armazenado em cache pode ser invalidado manualmente ou apagado além do TTL, mas isso acarreta um custo.
++ Você pode invalidar a distribuição de determinados objetos ou diretórios inteiros para que o conteúdo seja sempre carregado diretamente da origem. A invalidação do conteúdo também é útil durante a depuração se o conteúdo extraído da origem parecer correto, mas extrair esse mesmo conteúdo de um ponto de presença parecer incorreto.
++ Você pode configurar um failover para a origem criando um grupo de origem com duas origens dentro. Uma origem atuará como primária e a outra como secundária. O CloudFront alternará automaticamente entre os dois quando a origem primária falhar.
++ O Amazon CloudFront entrega seu conteúdo de cada ponto de presença e oferece um recurso SSL personalizado com IP dedicado. SNI Custom SSL funciona com a maioria dos navegadores modernos.
++ Se você executar cargas de trabalho compatíveis com PCI ou HIPAA e precisar registrar dados de uso, poderá fazer o seguinte:
+  + Habilite os logs de acesso do CloudFront.
+  + Capture solicitações enviadas para a API do CloudFront.
++ Uma Origin Access Identity (OAI) é usada para compartilhar conteúdo privado por meio do CloudFront. O OAI é um usuário virtual que será usado para conceder permissão à distribuição do CloudFront para buscar um objeto privado de sua origem (por exemplo, bucket S3).
+  
+# URLs assinados e cookies assinados do CloudFront:
++URLs assinados e cookies assinados do CloudFront fornecem a mesma funcionalidade básica: eles permitem que você controle quem pode acessar seu conteúdo. Esses recursos existem porque muitas empresas que distribuem conteúdo pela Internet desejam restringir o acesso a documentos, dados comerciais, fluxos de mídia ou conteúdo destinado a usuários selecionados. Por exemplo, os usuários que pagaram uma taxa deveriam poder acessar conteúdo privado que os usuários do nível gratuito não deveriam.
++ Se você quiser fornecer conteúdo privado por meio do CloudFront e estiver tentando decidir se deseja usar URLs assinados ou cookies assinados, considere o seguinte:
+  + Use URLs assinados nos seguintes casos:
+    + Você deseja usar uma distribuição RTMP. Cookies assinados não são compatíveis com distribuições RTMP.
+    + Você deseja restringir o acesso a arquivos individuais, por exemplo, um download de instalação do seu aplicativo.
+    + Seus usuários estão usando um cliente (por exemplo, um cliente HTTP personalizado) que não oferece suporte a cookies.
+  + Use cookies assinados para os seguintes casos:
+    + Você deseja fornecer acesso a vários arquivos restritos. Por exemplo, todos os arquivos de um vídeo em formato HLS ou todos os arquivos da área de usuários pagos de um site.
+    + Você não deseja alterar seus URLs atuais.
+   
+# Invalidação de cache
+O CloudFront armazena automaticamente o conteúdo em cache em seus pontos de presença para melhorar o desempenho de leitura. Porém, se o conteúdo for atualizado com frequência, será necessário invalidar o conteúdo armazenado em cache para que os usuários possam acessar a versão atualizada. Existem duas maneiras de invalidar conteúdo no CloudFront:
+
++ Invalidação de objeto individual - Este método permite invalidar um arquivo específico do cache do CloudFront.
++ Invalidação por caminho(by path) - Este método permite invalidar vários arquivos que correspondam a um determinado padrão. Isso pode ser feito especificando um padrão de caminho que corresponda aos arquivos que você deseja invalidar.
+É importante observar que a invalidação do conteúdo armazenado em cache no CloudFront pode levar algum tempo e resultar em um aumento temporário na latência. Além disso, há custos associados à invalidação do conteúdo em cache, por isso é importante considerar cuidadosamente quando e com que frequência realizar invalidações.
+
+# Acelerador Global AWS
+💡 **Anycast IP** é uma metodologia de endereçamento e roteamento de rede em que um único endereço IP é compartilhado por vários servidores ou dispositivos. Quando um cliente envia uma solicitação para um IP Anycast, a rede roteia a solicitação para o servidor ou dispositivo mais próximo que está anunciando o endereço IP, com base no protocolo de roteamento.
+Suponha que implantamos nosso aplicativo na Índia. No entanto, os usuários da América e da Europa podem enfrentar problemas de latência ao acessar nosso aplicativo devido ao tráfego de rede ter que atravessar a Internet pública antes de chegar à Índia. Para reduzir esta latência, decidimos implantar instâncias adicionais da aplicação na América do Norte, na América do Sul e na Europa. O objetivo é redirecionar os usuários com base em sua localização, de modo que, se um usuário estiver na América do Norte, ele será direcionado para a instância de aplicativo íntegro mais próxima naquela região. Para alcançar esse roteamento inteligente, utilizamos o AWS Global Accelerator.
+
+Quando um usuário faz uma solicitação, seu tráfego é direcionado para o ponto de presença da AWS mais próximo usando o roteamento Anycast IP. A partir daí, o AWS Global Accelerator roteia de forma inteligente o tráfego para a instância de aplicação íntegra mais próxima, levando em consideração fatores como integridade da rede, integridade da aplicação e proximidade do usuário.
