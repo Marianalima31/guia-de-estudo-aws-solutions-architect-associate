@@ -326,7 +326,23 @@ Classe de Preço Todas - Esta classe é a mais cara e abrange todas as regiões.
     + Você deseja fornecer acesso a vários arquivos restritos. Por exemplo, todos os arquivos de um vídeo em formato HLS ou todos os arquivos da área de usuários pagos de um site.
     + Você não deseja alterar seus URLs atuais.
    
-#Snowball
+# Invalidação de cache
+O CloudFront armazena automaticamente o conteúdo em cache em seus pontos de presença para melhorar o desempenho de leitura. Porém, se o conteúdo for atualizado com frequência, será necessário invalidar o conteúdo armazenado em cache para que os usuários possam acessar a versão atualizada. Existem duas maneiras de invalidar conteúdo no CloudFront:
+
++ Invalidação de objeto individual - Este método permite invalidar um arquivo específico do cache do CloudFront.
++ Invalidação por caminho(by path) - Este método permite invalidar vários arquivos que correspondam a um determinado padrão. Isso pode ser feito especificando um padrão de caminho que corresponda aos arquivos que você deseja invalidar.
+É importante observar que a invalidação do conteúdo armazenado em cache no CloudFront pode levar algum tempo e resultar em um aumento temporário na latência. Além disso, há custos associados à invalidação do conteúdo em cache, por isso é importante considerar cuidadosamente quando e com que frequência realizar invalidações.
+
+# Acelerador Global AWS
+💡 **Anycast IP** é uma metodologia de endereçamento e roteamento de rede em que um único endereço IP é compartilhado por vários servidores ou dispositivos. Quando um cliente envia uma solicitação para um IP Anycast, a rede roteia a solicitação para o servidor ou dispositivo mais próximo que está anunciando o endereço IP, com base no protocolo de roteamento.
+Suponha que implantamos nosso aplicativo na Índia. No entanto, os usuários da América e da Europa podem enfrentar problemas de latência ao acessar nosso aplicativo devido ao tráfego de rede ter que atravessar a Internet pública antes de chegar à Índia. Para reduzir esta latência, decidimos implantar instâncias adicionais da aplicação na América do Norte, na América do Sul e na Europa. O objetivo é redirecionar os usuários com base em sua localização, de modo que, se um usuário estiver na América do Norte, ele será direcionado para a instância de aplicativo íntegro mais próxima naquela região. Para alcançar esse roteamento inteligente, utilizamos o AWS Global Accelerator.
+
+Quando um usuário faz uma solicitação, seu tráfego é direcionado para o ponto de presença da AWS mais próximo usando o roteamento Anycast IP. A partir daí, o AWS Global Accelerator roteia de forma inteligente o tráfego para a instância de aplicação íntegra mais próxima, levando em consideração fatores como integridade da rede, integridade da aplicação e proximidade do usuário.
+
+![image](https://github.com/Marianalima31/guia-de-estudo-aws-solutions-architect-associate/assets/77506074/7ec045dc-324b-41ea-a03d-7ff58f04f85c)
+
+   
+# Snowball
 Snowball simplificado:
 Snowball é um disco físico gigante usado para migrar grandes quantidades de dados para a AWS. É uma solução de transporte de dados em escala de peta bytes. Usar um disco grande como o Snowball ajuda a contornar problemas comuns de transferência de dados em grande escala, como altos custos de rede, longos tempos de transferência e preocupações de segurança. As bolas de neve são extremamente seguras por design e, quando a transferência de dados é concluída, seus dados são apagados.
 
@@ -1538,18 +1554,4 @@ Recuperar configurações históricas de um ou mais recursos. ·
 Receba uma notificação sempre que um recurso for criado, modificado ou excluído.
 Visualize relacionamentos entre recursos. Por exemplo, talvez você queira localizar todos os recursos que usam um grupo de segurança específico.
    
-# Invalidação de cache
-O CloudFront armazena automaticamente o conteúdo em cache em seus pontos de presença para melhorar o desempenho de leitura. Porém, se o conteúdo for atualizado com frequência, será necessário invalidar o conteúdo armazenado em cache para que os usuários possam acessar a versão atualizada. Existem duas maneiras de invalidar conteúdo no CloudFront:
-
-+ Invalidação de objeto individual - Este método permite invalidar um arquivo específico do cache do CloudFront.
-+ Invalidação por caminho(by path) - Este método permite invalidar vários arquivos que correspondam a um determinado padrão. Isso pode ser feito especificando um padrão de caminho que corresponda aos arquivos que você deseja invalidar.
-É importante observar que a invalidação do conteúdo armazenado em cache no CloudFront pode levar algum tempo e resultar em um aumento temporário na latência. Além disso, há custos associados à invalidação do conteúdo em cache, por isso é importante considerar cuidadosamente quando e com que frequência realizar invalidações.
-
-# Acelerador Global AWS
-💡 **Anycast IP** é uma metodologia de endereçamento e roteamento de rede em que um único endereço IP é compartilhado por vários servidores ou dispositivos. Quando um cliente envia uma solicitação para um IP Anycast, a rede roteia a solicitação para o servidor ou dispositivo mais próximo que está anunciando o endereço IP, com base no protocolo de roteamento.
-Suponha que implantamos nosso aplicativo na Índia. No entanto, os usuários da América e da Europa podem enfrentar problemas de latência ao acessar nosso aplicativo devido ao tráfego de rede ter que atravessar a Internet pública antes de chegar à Índia. Para reduzir esta latência, decidimos implantar instâncias adicionais da aplicação na América do Norte, na América do Sul e na Europa. O objetivo é redirecionar os usuários com base em sua localização, de modo que, se um usuário estiver na América do Norte, ele será direcionado para a instância de aplicativo íntegro mais próxima naquela região. Para alcançar esse roteamento inteligente, utilizamos o AWS Global Accelerator.
-
-Quando um usuário faz uma solicitação, seu tráfego é direcionado para o ponto de presença da AWS mais próximo usando o roteamento Anycast IP. A partir daí, o AWS Global Accelerator roteia de forma inteligente o tráfego para a instância de aplicação íntegra mais próxima, levando em consideração fatores como integridade da rede, integridade da aplicação e proximidade do usuário.
-
-![image](https://github.com/Marianalima31/guia-de-estudo-aws-solutions-architect-associate/assets/77506074/7ec045dc-324b-41ea-a03d-7ff58f04f85c)
 
